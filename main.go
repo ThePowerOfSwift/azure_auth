@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -85,6 +86,7 @@ var (
 )
 
 func getenv(name string) string{
+	godotenv.Load()
 	v := os.Getenv(name)
 	if v == "" {
 		panic("Missing required environment variable " + name)
@@ -199,11 +201,44 @@ func retryWithRefresh(clientToken, refreshToken string) bool {
 	}
 	return true
 }
+
+func getPhotoHandler(w http.ResponseWriter, r *http.Request){
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return
+	}
+
+	it, err := FindRecord(db, token)
+	if err != nil {
+		return
+	}
+	tokenStr := fmt.Sprint("Bearer ", it[0].AccessToken)
+
+	picRequest, err := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/me/photo/$value", nil)
+	picRequest.Header.Set("Authorization", tokenStr)
+	picResponse, err := client.Do(picRequest)
+	if picResponse.StatusCode != 200 {
+		fmt.Println("Something went wrong, accessing user picture")
+		return
+	}
+	if err != nil {
+		fmt.Errorf("ERROR: %s", err)
+		return
+	}
+	bb, _ := ioutil.ReadAll(picResponse.Body)
+	if bb == nil {
+		w.Write([]byte{})
+	}
+
+	w.Write(bb)
+}
+
 func main() {
 	defer db.Close()
 	m := martini.Classic()
 
 	m.Get("/get_me", getMeHandler)
+	m.Get("/get_user_photo", getPhotoHandler)
 	m.Post("/auth_with_temporary_token", authWithTempTokenHandler)
 	m.Get("/auth", oauthHandler)
 	m.Get("/auth_url", oauthUrlHandler)
