@@ -1,0 +1,48 @@
+{
+	"ImportPath": "azure_auth",
+	"GoVersion": "go1.11",
+	"GodepVersion": "v80",
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/inject",
+			"Comment": "v1.0-rc1-10-g33e0aa1",
+			"Rev": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504"
+		},
+		{
+			"ImportPath": "github.com/go-martini/martini",
+			"Comment": "v1.0-188-g22fa469",
+			"Rev": "22fa46961aabd2665cf3f1343b146d20028f5071"
+		},
+		{
+			"ImportPath": "github.com/google/uuid",
+			"Comment": "v1.1.1-7-gc2e93f3",
+			"Rev": "c2e93f3ae59f2904160ceaab466009f965df46d6"
+		},
+		{
+			"ImportPath": "github.com/joho/godotenv",
+			"Comment": "v1.3.0-10-g5c0e6c6",
+			"Rev": "5c0e6c6ab1a0a9ef0a8822cba3a05d62f7dad941"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Comment": "v1.10.0-49-g070b17a",
+			"Rev": "070b17a2fdf5109d2dd54acb6bbfb507872115cf"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context/ctxhttp",
+			"Rev": "f3200d17e092c607f615320ecaad13d87ad9a2b3"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2",
+			"Rev": "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/internal",
+			"Rev": "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/microsoft",
+			"Rev": "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
+		}
+	]
+}

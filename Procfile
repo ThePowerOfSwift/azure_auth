@@ -1,0 +1,1 @@
+web: azure_auth
