@@ -126,9 +126,7 @@ func getMeRequest(token string) *http.Response {
 }
 
 func getMeHandler(w http.ResponseWriter, r *http.Request) {
-	keys := r.URL.Query()
-	token := keys.Get("token")
-	validateParams(token)
+	token := r.Header.Get("Authorization")
 
 	it, err := FindRecord(db, token)
 	if err != nil {
