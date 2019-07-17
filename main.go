@@ -71,7 +71,6 @@ type LoggedUserInfo struct {
 
 var (
 	db = InitDB("./authData")
-	myEnv, envErr         = godotenv.Read()
 
 	timeout = time.Duration(5 * time.Second)
 	client  = http.Client{
@@ -90,10 +89,11 @@ var (
 )
 
 func getenv(name string) string{
-	if envErr != nil {
+	err := godotenv.Load()
+	if err != nil {
 		panic("Error while reading local variables")
 	}
-	v := myEnv[name]
+	v := os.Getenv(name)
 	if v == "" {
 		panic("Missing required environment variable " + name)
 	}
