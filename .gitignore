@@ -1,5 +1,3 @@
 .env
 .DS_Store
 .idea/
-azure_auth
-authData
