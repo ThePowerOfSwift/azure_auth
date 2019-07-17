@@ -71,6 +71,7 @@ type LoggedUserInfo struct {
 
 var (
 	db = InitDB("./authData")
+	myEnv, envErr         = godotenv.Read()
 
 	timeout = time.Duration(5 * time.Second)
 	client  = http.Client{
@@ -92,8 +93,6 @@ var (
 	RedirectOauthUrlConst = getenv("REDIRECT_OAUTH_PATH")
 	AuthUrl               = getenv("AUTH_URL")
 	BasicUrl              = getenv("BASIC_URL")
-
-	myEnv, envErr         = godotenv.Read()
 )
 
 func getenv(name string) string{
