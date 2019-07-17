@@ -35,14 +35,15 @@ var (
 	xOauth2Config = oauth2.Config{
 		ClientID:     ClientIdConst,
 		ClientSecret: ClientSecretConst,
-		RedirectURL:  RedirectOauthUrlConst,
+		RedirectURL:  fmt.Sprint(BaseUrl, "/auth/azureactivedirectory/callback"),
 		Endpoint:     microsoft.AzureADEndpoint(TenantConst),
 		Scopes:       OuathScopes,
 	}
 )
 
 func oauthUrlHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, AuthUrl)
+	authUrl := fmt.Sprint(BaseUrl, "/auth")
+	fmt.Fprintf(w, authUrl)
 }
 
 // Auth handler which will redirect to AAD

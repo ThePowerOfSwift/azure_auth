@@ -10,5 +10,5 @@ type Authority struct {
 }
 
 func (a Authority) String() string {
-	return fmt.Sprintf("https://%s/%s%s", a.Host, a.Tenant, TokenPathConst)
+	return fmt.Sprintf("https://%s/%s%s", a.Host, a.Tenant, "/oauth2/token")
 }

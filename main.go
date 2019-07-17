@@ -78,21 +78,15 @@ var (
 		Timeout: timeout,
 	}
 
-	authority             = Authority{WorldWideAuthority, os.Getenv("TENANT")}
 	OuathScopes           = []string{"offline_access", "openid"}
-
 	ClientIdConst         = getenv("CLIENT_ID")
 	TenantConst           = getenv("TENANT")
 	ResourcePathConst     = getenv("RESOURCE_PATH")
-	TokenPathConst        = getenv("TOKEN_PATH")
 	WorldWideAuthority    = getenv("WORLD_WIDE_AUTHORITY")
-	UrlUsernamemixedConst = getenv("URL_USERNAMEMIXED")
-	AssertianXpathConst   = getenv("ASSERTION_XPATH")
-	TokenGrantTypeConst   = getenv("TOKEN_GRANT_TYPE")
 	ClientSecretConst     = getenv("CLIENT_SECRET")
-	RedirectOauthUrlConst = getenv("REDIRECT_OAUTH_PATH")
-	AuthUrl               = getenv("AUTH_URL")
-	BasicUrl              = getenv("BASIC_URL")
+	BaseUrl				  = getenv("BASE_URL")
+
+	authority             = Authority{WorldWideAuthority, os.Getenv("TENANT")}
 )
 
 func getenv(name string) string{
@@ -119,8 +113,8 @@ func getMeRequest(token string) *http.Response {
 	tokenStr := fmt.Sprint("Bearer ", token)
 	meRequest.Header.Set("Authorization", tokenStr)
 
-	meResonse, err := client.Do(meRequest)
-	if meResonse.StatusCode != 200 {
+	meResponse, err := client.Do(meRequest)
+	if meResponse.StatusCode != 200 {
 		panic("Something went wrong, retry to sign in please")
 	}
 
@@ -128,7 +122,7 @@ func getMeRequest(token string) *http.Response {
 		panic(fmt.Errorf("ERROR: %s", err))
 	}
 
-	return meResonse
+	return meResponse
 }
 
 func getMeHandler(w http.ResponseWriter, r *http.Request) {
