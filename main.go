@@ -79,19 +79,13 @@ var (
 	OuathScopes           = []string{"offline_access", "openid"}
 	ClientIdConst         = getenv("CLIENT_ID")
 	TenantConst           = getenv("TENANT")
-	ResourcePathConst     = getenv("RESOURCE_PATH")
 	WorldWideAuthority    = getenv("WORLD_WIDE_AUTHORITY")
 	ClientSecretConst     = getenv("CLIENT_SECRET")
 	BaseUrl				  = getenv("BASE_URL")
-
-	authority             = Authority{WorldWideAuthority, os.Getenv("TENANT")}
+	authority             = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
 )
 
 func getenv(name string) string{
-	//err := godotenv.Load()
-	//if err != nil {
-	//	panic("Error while reading local variables")
-	//}
 	v := os.Getenv(name)
 	if v == "" {
 		panic("Missing required environment variable " + name)
@@ -169,7 +163,7 @@ func retryWithRefresh(clientToken, refreshToken string) bool {
 	params.Add("refresh_token", refreshToken)
 	params.Add("client_id", ClientIdConst)
 	params.Add("client_secret", ClientSecretConst)
-	params.Add("resource", ResourcePathConst)
+	params.Add("resource", "https://graph.microsoft.com")
 
 	urlBytes := []byte(strings.TrimSpace(params.Encode()))
 
