@@ -79,7 +79,6 @@ var (
 	OuathScopes           = []string{"offline_access", "openid"}
 	ClientIdConst         = getenv("CLIENT_ID")
 	TenantConst           = getenv("TENANT")
-	WorldWideAuthority    = getenv("WORLD_WIDE_AUTHORITY")
 	ClientSecretConst     = getenv("CLIENT_SECRET")
 	BaseUrl				  = getenv("BASE_URL")
 	authority             = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
