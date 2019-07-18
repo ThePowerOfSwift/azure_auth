@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -86,7 +85,7 @@ var (
 )
 
 func getenv(name string) string{
-	godotenv.Load()
+	//godotenv.Load()
 	v := os.Getenv(name)
 	if v == "" {
 		panic("Missing required environment variable " + name)

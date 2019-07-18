@@ -32,7 +32,7 @@ func randToken(n int) string {
 
 func generateTempTokenUrl(tempToken string) string {
 	var buf bytes.Buffer
-	buf.WriteString("https://azure_auth.herokuapp.com")
+	buf.WriteString(BaseUrl)
 	v := url.Values{
 		"temporary_token": {tempToken},
 	}
