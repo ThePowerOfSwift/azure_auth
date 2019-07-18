@@ -1,0 +1,96 @@
+{
+	"info": {
+		"_postman_id": "449277f8-aa4a-4826-bc34-203f47108de6",
+		"name": "azureGoAuth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get actual auth url",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/auth_url",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth_url"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "auth_with_temporary_token",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/auth_with_temporary_token?temporary_token=7bc39f50-8398-491c-8851-7e7b8e616f0d",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"auth_with_temporary_token"
+					],
+					"query": [
+						{
+							"key": "temporary_token",
+							"value": "7bc39f50-8398-491c-8851-7e7b8e616f0d"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_me",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/get_me?token=aefc2280-663f-4595-a6ee-94a3a9b6b323",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"get_me"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "aefc2280-663f-4595-a6ee-94a3a9b6b323"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_user_photo",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "f6bf0395-2ff4-41a3-a50c-8c1017ea0441",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/get_user_photo",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"get_user_photo"
+					]
+				},
+				"description": "Get user photo"
+			},
+			"response": []
+		}
+	]
+}
