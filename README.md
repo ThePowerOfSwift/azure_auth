@@ -44,3 +44,11 @@ _also you can use postman collection_ `azureGoAuth.postman_collection.json`
 ## How to deploy on heroku 
 
 [info here](https://www.google.com/search?source=hp&ei=BRkwXdPOCYqOrwTc35uwDA&q=heroku+deploy+golang+app&oq=golang+deploy+heroku&gs_l=psy-ab.1.1.0j0i8i30.2327.15465..18521...0.0..0.145.2726.0j21......0....1..gws-wiz.....0..0i10j0i7i30j0i8i7i30.7RQ-mSRSH5c)
+
+## Contributing 
+
+ 1) Fork it
+ 2) Create your feature branch (git checkout -b my-new-feature)
+ 3) Commit your changes (git commit -am 'Add some feature')
+ 4) Push to the branch (git push origin my-new-feature)
+ 5) Create new Pull Request
