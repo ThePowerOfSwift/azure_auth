@@ -13,7 +13,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	b64 "encoding/base64"
 )
 
 type OauthResponse struct {
