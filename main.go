@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+	b64 "encoding/base64"
 )
 
 type OauthResponse struct {
@@ -85,7 +87,7 @@ var (
 )
 
 func getenv(name string) string{
-	//godotenv.Load()
+	godotenv.Load()
 	v := os.Getenv(name)
 	if v == "" {
 		panic("Missing required environment variable " + name)
@@ -224,12 +226,12 @@ func getPhotoHandler(w http.ResponseWriter, r *http.Request){
 		fmt.Errorf("ERROR: %s", err)
 		return
 	}
-	bb, _ := ioutil.ReadAll(picResponse.Body)
-	if bb == nil {
+	pictureBinary, _ := ioutil.ReadAll(picResponse.Body)
+	if pictureBinary == nil {
 		w.Write([]byte{})
 	}
 
-	w.Write(bb)
+	w.Write(pictureBinary)
 }
 
 func main() {
