@@ -37,4 +37,10 @@ next to start application run
 and after all auth steps you will be redirected to some url which contains temporary_token)
  - [POST] "BASE_URL/auth_with_temporary_token?temporary_token=[temporary_token]" (exchange temporary token to public token) 
  - [GET] "BASE_URL/get_me" (in Authorization header put public token) (returns info about user)
+ - [GET] "BASE_URL/get_user_photo" (in Authorization header put public token) (returns blob)
+ 
+_also you can use postman collection_ `azureGoAuth.postman_collection.json`
 
+## How to deploy on heroku 
+
+[info here](https://www.google.com/search?source=hp&ei=BRkwXdPOCYqOrwTc35uwDA&q=heroku+deploy+golang+app&oq=golang+deploy+heroku&gs_l=psy-ab.1.1.0j0i8i30.2327.15465..18521...0.0..0.145.2726.0j21......0....1..gws-wiz.....0..0i10j0i7i30j0i8i7i30.7RQ-mSRSH5c)
