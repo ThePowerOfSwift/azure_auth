@@ -69,7 +69,6 @@ func aadAuthHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, tempTokenURL, 301)
 }
 
-
 func getMeRequest(token string) *http.Response {
 	meRequest, err := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/me", nil)
 	if err != nil {

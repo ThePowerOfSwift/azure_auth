@@ -23,21 +23,21 @@ var (
 		Timeout: timeout,
 	}
 
-	OuathScopes           = []string{"offline_access", "openid"}
-	ClientIdConst         = getenv("CLIENT_ID")
-	TenantConst           = getenv("TENANT")
-	ClientSecretConst     = getenv("CLIENT_SECRET")
-	BaseUrl				  = getenv("BASE_URL")
-	DbUser= getenv("DB_USER")
-	DbPassword= getenv("DB_PASSWORD")
-	DbPort= getenv("DB_PORT")
-	DbName= getenv("DB_NAME")
-	DbHost= getenv("DB_HOST")
+	OuathScopes       = []string{"offline_access", "openid"}
+	ClientIdConst     = getenv("CLIENT_ID")
+	TenantConst       = getenv("TENANT")
+	ClientSecretConst = getenv("CLIENT_SECRET")
+	BaseUrl           = getenv("BASE_URL")
+	DbUser            = getenv("DB_USER")
+	DbPassword        = getenv("DB_PASSWORD")
+	DbPort            = getenv("DB_PORT")
+	DbName            = getenv("DB_NAME")
+	DbHost            = getenv("DB_HOST")
 
-	authority             = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
+	authority = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
 )
 
-func getenv(name string) string{
+func getenv(name string) string {
 	_, err := os.Stat(".env")
 	if err == nil {
 		godotenv.Load()
@@ -118,7 +118,7 @@ func retryWithRefresh(user *User) bool {
 	return true
 }
 
-func getPhotoHandler(w http.ResponseWriter, r *http.Request){
+func getPhotoHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 
 	user := FindUserByPubToken(token)

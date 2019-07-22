@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	"golang.org/x/oauth2"
 	"time"
-	"fmt"
 )
 
 var connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -19,8 +19,8 @@ type Model struct {
 
 type User struct {
 	gorm.Model
-	AzureId            string
-	Name            string
+	AzureId           string
+	Name              string
 	AccessToken       string
 	RefreshToken      string
 	ClientPublicToken string
@@ -83,7 +83,7 @@ func FindUserByPubToken(token string) (user User) {
 	return
 }
 
-func (user *User) UpdateToken(t *OToken){
+func (user *User) UpdateToken(t *OToken) {
 	if t.AccessToken != "" {
 		user.AccessToken = t.AccessToken
 	}
@@ -96,7 +96,7 @@ func (user *User) UpdateToken(t *OToken){
 func FindOrCreateUser(token *OToken, userInfo *AzureUserInfo) User {
 	user := User{}
 	db.Find(&user, "azure_id = ?", userInfo.ID)
-	if (User{} != user)  {
+	if (User{} != user) {
 		user.UpdateToken(token)
 		return user
 	}
@@ -105,14 +105,14 @@ func FindOrCreateUser(token *OToken, userInfo *AzureUserInfo) User {
 	return user
 }
 
-func RefreshToken(user *User, r refreshTokenResponse){
-user.AccessToken = r.AccessToken
-user.RefreshToken = r.RefreshToken
+func RefreshToken(user *User, r refreshTokenResponse) {
+	user.AccessToken = r.AccessToken
+	user.RefreshToken = r.RefreshToken
 
 	db.Save(&user)
 }
 
-func(user *User) Create(t *OToken, ui *AzureUserInfo){
+func (user *User) Create(t *OToken, ui *AzureUserInfo) {
 	user.AccessToken = t.AccessToken
 	user.TemporaryToken = t.TemporaryToken
 	user.ClientPublicToken = t.PublicToken
