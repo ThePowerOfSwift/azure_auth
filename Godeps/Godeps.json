@@ -49,6 +49,11 @@
 			"Rev": "2ff3cb3adc01768e0a552b3a02575a6df38a9bea"
 		},
 		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Comment": "v1.10.0-49-g070b17a",
+			"Rev": "070b17a2fdf5109d2dd54acb6bbfb507872115cf"
+		},
+		{
 			"ImportPath": "golang.org/x/net/context/ctxhttp",
 			"Rev": "f3200d17e092c607f615320ecaad13d87ad9a2b3"
 		},

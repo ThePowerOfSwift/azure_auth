@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +18,8 @@ import (
 )
 
 var (
-	db = InitDB()
+	db *gorm.DB
+	devEnv = flag.Bool("d", false, "setup dev env var")
 
 	timeout = time.Duration(5 * time.Second)
 	client  = http.Client{
@@ -28,12 +31,8 @@ var (
 	TenantConst       = getenv("TENANT")
 	ClientSecretConst = getenv("CLIENT_SECRET")
 	BaseUrl           = getenv("BASE_URL")
-	DbUser            = getenv("DB_USER")
-	DbPassword        = getenv("DB_PASSWORD")
-	DbPort            = getenv("DB_PORT")
-	DbName            = getenv("DB_NAME")
-	DbHost            = getenv("DB_HOST")
-
+	dialect = "sqlite3"
+	connStr = "./authData"
 	authority = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
 )
 
@@ -149,7 +148,11 @@ func getPhotoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	flag.Parse()
+
+	db = InitDB()
 	defer db.Close()
+
 	m := martini.Classic()
 
 	m.Get("/get_me", getMeHandler)
