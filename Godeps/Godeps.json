@@ -19,6 +19,16 @@
 			"Rev": "c2e93f3ae59f2904160ceaab466009f965df46d6"
 		},
 		{
+			"ImportPath": "github.com/jinzhu/gorm",
+			"Comment": "v1.9.10",
+			"Rev": "836fb2c19d84dac7b0272958dfb9af7cf0d0ade4"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/inflection",
+			"Comment": "v1.0.0",
+			"Rev": "f5c5f50e6090ae76a29240b61ae2a90dd810112e"
+		},
+		{
 			"ImportPath": "github.com/joho/godotenv",
 			"Comment": "v1.3.0-10-g5c0e6c6",
 			"Rev": "5c0e6c6ab1a0a9ef0a8822cba3a05d62f7dad941"
