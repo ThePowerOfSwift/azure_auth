@@ -1,144 +1,123 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"github.com/google/uuid"
-
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/oauth2"
+	"time"
+	"fmt"
 )
 
-type UserDataToSave struct {
-	UserId            string
+var connStr = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	DbHost, DbPort, DbUser, DbPassword, DbName)
+
+type Model struct {
+	ID        int `gorm:"AUTO_INCREMENT;PRIMARY_KEY"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type User struct {
+	gorm.Model
+	AzureId            string
+	Name            string
 	AccessToken       string
 	RefreshToken      string
 	ClientPublicToken string
 	TemporaryToken    string
 }
 
-type TokenInterface interface {
-	getAccessToken() string
-	getRefreshToken() string
-	getTemporaryToken() string
-	publicToken() string
+type AzureUserInfo struct {
+	OdataContext      string        `json:"@odata.context"`
+	BusinessPhones    []interface{} `json:"businessPhones"`
+	DisplayName       string        `json:"displayName"`
+	GivenName         string        `json:"givenName"`
+	JobTitle          string        `json:"jobTitle"`
+	Mail              string        `json:"mail"`
+	MobilePhone       interface{}   `json:"mobilePhone"`
+	OfficeLocation    string        `json:"officeLocation"`
+	PreferredLanguage interface{}   `json:"preferredLanguage"`
+	Surname           string        `json:"surname"`
+	UserPrincipalName string        `json:"userPrincipalName"`
+	ID                string        `json:"id"`
 }
 
-func NewUserDataToSave(o TokenInterface, l LoggedUserInfo) UserDataToSave {
-	return UserDataToSave{
-		UserId:            l.ID,
-		AccessToken:       o.getAccessToken(),
-		RefreshToken:      o.getRefreshToken(),
-		ClientPublicToken: o.publicToken(),
-		TemporaryToken:    o.getTemporaryToken(),
-	}
+type refreshTokenResponse struct {
+	TokenType    string `json:"token_type"`
+	Scope        string `json:"scope"`
+	ExpiresIn    string `json:"expires_in"`
+	ExtExpiresIn string `json:"ext_expires_in"`
+	ExpiresOn    string `json:"expires_on"`
+	NotBefore    string `json:"not_before"`
+	Resource     string `json:"resource"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
-func InitDB(filepath string) *sql.DB {
-	db, err := sql.Open("sqlite3", filepath)
+type OToken struct {
+	*oauth2.Token
+	TemporaryToken string
+	PublicToken    string
+}
+
+func InitDB() *gorm.DB {
+	db, err := gorm.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
 	if db == nil {
 		panic("db nil")
 	}
+	db.AutoMigrate(&User{})
 	return db
 }
 
-func CreateTable(db *sql.DB) {
-	sqlTable := `
-	CREATE TABLE IF NOT EXISTS user_auth_data(
-		Id INTEGER PRIMARY KEY AUTOINCREMENT,
-		UserId TEXT,
-		AccessToken TEXT,
-		RefreshToken TEXT,
-		ClientPublicToken TEXT,
-		TemporaryToken TEXT
-	);
-	`
-
-	_, err := db.Exec(sqlTable)
-	if err != nil {
-		panic(err)
-	}
+func FindUserByTempToken(token string) (user User) {
+	user = User{}
+	db.Find(&user, "temporary_token = ?", token)
+	return
+}
+func FindUserByPubToken(token string) (user User) {
+	user = User{}
+	db.Find(&user, "client_public_token = ?", token)
+	return
 }
 
-func StoreItem(db *sql.DB, item UserDataToSave) {
-	sqlStatement := `
-	INSERT OR REPLACE INTO user_auth_data(
-		UserId,
-		AccessToken,
-		RefreshToken,
-		ClientPublicToken,
-	    TemporaryToken
-	) values(?, ?, ?, ?, ?)
-	`
+func (user *User) UpdateToken(t *OToken){
+	if t.AccessToken != "" {
+		user.AccessToken = t.AccessToken
+	}
+	user.TemporaryToken = t.TemporaryToken
+	user.ClientPublicToken = t.PublicToken
 
-	stmt, err := db.Prepare(sqlStatement)
-	if err != nil {
-		panic(err)
-	}
-	defer stmt.Close()
-
-	_, err2 := stmt.Exec(item.UserId, item.AccessToken, item.RefreshToken, item.ClientPublicToken, item.TemporaryToken)
-	if err2 != nil {
-		panic(err2)
-	}
-}
-func FindRecord(db *sql.DB, token string) (item []UserDataToSave, err error) {
-	sqlStatement := `
-	SELECT ClientPublicToken, AccessToken, RefreshToken FROM user_auth_data
-	WHERE ClientPublicToken = $1
-	`
-
-	rows, err := db.Query(sqlStatement, token)
-	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
-	}
-	defer rows.Close()
-
-	var result []UserDataToSave
-	var count uint32
-	for rows.Next() {
-		item := UserDataToSave{}
-		err = rows.Scan(&item.ClientPublicToken, &item.AccessToken, &item.RefreshToken)
-		count++
-		result = append(result, item)
-	}
-	if count == 0 {
-		fmt.Println("No records found with public token:", token)
-		err = fmt.Errorf("No records found with public token: %s", token)
-	}
-	return result, err
+	db.Save(&user)
 }
 
-func UpdateItem(db *sql.DB, token, authToken, refreshToken string) (err error) {
-	sqlStatement := `
-		UPDATE user_auth_data
-		SET AccessToken = $1, RefreshToken = $2
-		WHERE ClientPublicToken = $3;
-	`
-	_, err = db.Exec(sqlStatement, authToken, refreshToken, token)
+func FindOrCreateUser(token *OToken, userInfo *AzureUserInfo) User {
+	user := User{}
+	db.Find(&user, "azure_id = ?", userInfo.ID)
+	if (User{} != user)  {
+		user.UpdateToken(token)
+		return user
+	}
+	user.Create(token, userInfo)
 
-	return err
+	return user
 }
 
-func ChangeTemporaryTokenToPublic(db *sql.DB, token string) (clientPublicToken string, err error) {
-	clientPublicToken = fmt.Sprint(uuid.New())
-	sqlStatement := `
-			UPDATE user_auth_data
-			SET ClientPublicToken = $1, TemporaryToken = $2
-			WHERE TemporaryToken = $3;
-		`
+func RefreshToken(user *User, r refreshTokenResponse){
+user.AccessToken = r.AccessToken
+user.RefreshToken = r.RefreshToken
 
-	res, err := db.Exec(sqlStatement, clientPublicToken, "", token)
-	if err != nil {
-		return "", err
-	}
-	var rows int64
-	rows, _ = res.RowsAffected()
-	if rows == 0 {
-		fmt.Println("Record with TemporaryToken", token, "not found")
-		err = fmt.Errorf("Record with TemporaryToken %s, not found", token)
-	}
-	return clientPublicToken, err
+	db.Save(&user)
+}
+
+func(user *User) Create(t *OToken, ui *AzureUserInfo){
+	user.AccessToken = t.AccessToken
+	user.TemporaryToken = t.TemporaryToken
+	user.ClientPublicToken = t.PublicToken
+	user.Name = ui.DisplayName
+	user.AzureId = ui.ID
+
+	db.Create(&user)
 }

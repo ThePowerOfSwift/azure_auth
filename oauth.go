@@ -12,25 +12,6 @@ import (
 	"golang.org/x/oauth2/microsoft"
 )
 
-// wrapper to oauth2.Token. I can not implement interface TokenInterface with non local value
-type oToken struct {
-	*oauth2.Token
-	TemporaryToken string
-}
-
-func (t oToken) publicToken() string {
-	return ""
-}
-func (t oToken) getTemporaryToken() string {
-	return t.TemporaryToken
-}
-func (t oToken) getAccessToken() string {
-	return t.AccessToken
-}
-func (t oToken) getRefreshToken() string {
-	return t.RefreshToken
-}
-
 var (
 	xOauth2Config = oauth2.Config{
 		ClientID:     ClientIdConst,
@@ -69,21 +50,45 @@ func aadAuthHandler(w http.ResponseWriter, r *http.Request) {
 	meResponse := getMeRequest(oAuthToken.AccessToken)
 	defer meResponse.Body.Close()
 
-	var loggedUserInfo LoggedUserInfo
+	var azureUserInfo AzureUserInfo
 	meBytes, err := ioutil.ReadAll(meResponse.Body)
 	handleError(err)
 
-	err = json.Unmarshal(meBytes, &loggedUserInfo)
+	err = json.Unmarshal(meBytes, &azureUserInfo)
 	handleError(err)
 
-	token := oToken{oAuthToken, fmt.Sprint(uuid.New())}
+	token := OToken{Token: oAuthToken, PublicToken: "", TemporaryToken: fmt.Sprint(uuid.New())}
 
-	dataToSave := NewUserDataToSave(token, loggedUserInfo)
-
-	StoreItem(db, dataToSave)
+	user := FindOrCreateUser(&token, &azureUserInfo)
+	authUrl := fmt.Sprint(BaseUrl, "/auth")
+	if (User{} == user) {
+		http.Redirect(w, r, authUrl, http.StatusNotFound)
+	}
 
 	tempTokenURL := generateTempTokenUrl(token.TemporaryToken)
 	http.Redirect(w, r, tempTokenURL, 301)
+}
+
+
+func getMeRequest(token string) *http.Response {
+	meRequest, err := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/me", nil)
+	if err != nil {
+		panic(fmt.Errorf("ERROR: %s", err))
+	}
+
+	tokenStr := fmt.Sprint("Bearer ", token)
+	meRequest.Header.Set("Authorization", tokenStr)
+
+	meResponse, err := client.Do(meRequest)
+	if meResponse.StatusCode != 200 {
+		panic("Something went wrong, retry to sign in please")
+	}
+
+	if err != nil {
+		panic(fmt.Errorf("ERROR: %s", err))
+	}
+
+	return meResponse
 }
 
 func authWithTempTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,12 +96,15 @@ func authWithTempTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 	temporaryToken := keys.Get("temporary_token")
 
-	validateParams(temporaryToken)
-
-	clientPublicToken, err := ChangeTemporaryTokenToPublic(db, temporaryToken)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+	user := FindUserByTempToken(temporaryToken)
+	if (user == User{}) {
+		http.Error(w, "Record not found", http.StatusNotFound)
 		return
 	}
-	fmt.Fprintf(w, clientPublicToken)
+
+	var oAuthToken oauth2.Token
+	token := OToken{Token: &oAuthToken, PublicToken: fmt.Sprint(uuid.New()), TemporaryToken: ""}
+	user.UpdateToken(&token)
+
+	fmt.Fprintf(w, user.ClientPublicToken)
 }
