@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-var connStr = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+var connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 	DbHost, DbPort, DbUser, DbPassword, DbName)
 
 type Model struct {
