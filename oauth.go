@@ -79,9 +79,6 @@ func getMeRequest(token string) *http.Response {
 	meRequest.Header.Set("Authorization", tokenStr)
 
 	meResponse, err := client.Do(meRequest)
-	if meResponse.StatusCode != 200 {
-		panic("Something went wrong, retry to sign in please")
-	}
 
 	if err != nil {
 		panic(fmt.Errorf("ERROR: %s", err))
