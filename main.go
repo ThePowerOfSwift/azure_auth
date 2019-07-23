@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	db *gorm.DB
+	db     *gorm.DB
 	devEnv = flag.Bool("d", false, "setup dev env var")
 
 	timeout = time.Duration(5 * time.Second)
@@ -31,9 +31,9 @@ var (
 	TenantConst       = getenv("TENANT")
 	ClientSecretConst = getenv("CLIENT_SECRET")
 	BaseUrl           = getenv("BASE_URL")
-	dialect = "sqlite3"
-	connStr = "./authData"
-	authority = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
+	dialect           = "sqlite3"
+	connStr           = "./authData"
+	authority         = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
 )
 
 func getenv(name string) string {
@@ -120,7 +120,6 @@ func retryWithRefresh(user *User) {
 	}
 
 	RefreshToken(user, refreshTokenResponse)
-
 
 }
 
