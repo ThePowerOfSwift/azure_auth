@@ -121,8 +121,8 @@ func (user *User) Create(t *OToken, ui *AzureUserInfo) {
 	user.AccessToken = t.AccessToken
 	user.TemporaryToken = t.TemporaryToken
 	user.ClientPublicToken = t.PublicToken
-	user.Name = ui.DisplayName
 	user.RefreshToken = t.RefreshToken
+	user.Name = ui.DisplayName
 	user.AzureId = ui.ID
 
 	db.Create(&user)
