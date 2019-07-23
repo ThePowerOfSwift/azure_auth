@@ -1,15 +1,13 @@
 package main
 
 import (
-	"fmt"
+"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/oauth2"
 	"time"
 )
-
-var connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-	DbHost, DbPort, DbUser, DbPassword, DbName)
 
 type Model struct {
 	ID        int `gorm:"AUTO_INCREMENT;PRIMARY_KEY"`
@@ -61,7 +59,14 @@ type OToken struct {
 }
 
 func InitDB() *gorm.DB {
-	db, err := gorm.Open("postgres", connStr)
+	if !*devEnv{
+		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			getenv("DB_HOST"), getenv("DB_PORT"), getenv("DB_USER"), getenv("DB_PASSWORD"), getenv("DB_NAME"))
+		dialect = "postgres"
+
+	}
+
+	db, err := gorm.Open(dialect, connStr)
 	if err != nil {
 		panic(err)
 	}
@@ -116,6 +121,7 @@ func (user *User) Create(t *OToken, ui *AzureUserInfo) {
 	user.AccessToken = t.AccessToken
 	user.TemporaryToken = t.TemporaryToken
 	user.ClientPublicToken = t.PublicToken
+	user.RefreshToken = t.RefreshToken
 	user.Name = ui.DisplayName
 	user.AzureId = ui.ID
 

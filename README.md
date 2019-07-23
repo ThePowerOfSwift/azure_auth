@@ -26,8 +26,10 @@ This will compile project,
 next to start application run 
 
 ```bash
-./azure_auth
+./azure_auth -d
 ```
+_flag -d means development environment_ 
+
 (Depending on OS binary might be different)
 
 ## URLs
