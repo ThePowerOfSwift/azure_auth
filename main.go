@@ -31,6 +31,7 @@ var (
 	TenantConst       = getenv("TENANT")
 	ClientSecretConst = getenv("CLIENT_SECRET")
 	BaseUrl           = getenv("BASE_URL")
+	RedirectPath      = getenv("REDIRECT_PATH")
 	dialect           = "sqlite3"
 	connStr           = "./authData"
 	authority         = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
@@ -166,6 +167,6 @@ func main() {
 	m.Post("/auth_with_temporary_token", authWithTempTokenHandler)
 	m.Get("/auth", oauthHandler)
 	m.Get("/auth_url", oauthUrlHandler)
-	m.Get("/auth/azureactivedirectory/callback", aadAuthHandler)
+	m.Get(RedirectPath, aadAuthHandler)
 	m.Run()
 }

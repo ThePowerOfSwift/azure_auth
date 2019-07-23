@@ -14,6 +14,12 @@ In project directory run `go get ./...`  to install all dependencies.
 
 Next fill up .env file with your credentials. (Use as an example `example.env`)
 
+### Environment variables 
+
+REDIRECT_PATH Use redirect url indicated in azure 
+
+`BASE_URL/<this/is/redirect_path>`
+
 ## How to run application locally
 
 being in project directory run command

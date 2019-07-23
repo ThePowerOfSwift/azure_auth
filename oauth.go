@@ -16,7 +16,7 @@ var (
 	xOauth2Config = oauth2.Config{
 		ClientID:     ClientIdConst,
 		ClientSecret: ClientSecretConst,
-		RedirectURL:  fmt.Sprint(BaseUrl, "/auth/azureactivedirectory/callback"),
+		RedirectURL:  fmt.Sprint(BaseUrl, RedirectPath),
 		Endpoint:     microsoft.AzureADEndpoint(TenantConst),
 		Scopes:       OuathScopes,
 	}
