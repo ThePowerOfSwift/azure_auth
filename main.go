@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	db *gorm.DB
+	db     *gorm.DB
 	devEnv = flag.Bool("d", false, "setup dev env var")
 
 	timeout = time.Duration(5 * time.Second)
@@ -31,9 +31,9 @@ var (
 	TenantConst       = getenv("TENANT")
 	ClientSecretConst = getenv("CLIENT_SECRET")
 	BaseUrl           = getenv("BASE_URL")
-	dialect = "sqlite3"
-	connStr = "./authData"
-	authority = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
+	dialect           = "sqlite3"
+	connStr           = "./authData"
+	authority         = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
 )
 
 func getenv(name string) string {
@@ -60,8 +60,12 @@ func getMeHandler(w http.ResponseWriter, r *http.Request) {
 	defer meResponse.Body.Close()
 
 	if meResponse.StatusCode != 200 {
-		if !retryWithRefresh(&user) {
-			panic("Something went wrong, retry to sign in please")
+		retryWithRefresh(&user)
+		meResponse = getMeRequest(user.AccessToken)
+
+		if meResponse.StatusCode != 200 {
+			authUrl := fmt.Sprint(BaseUrl, "/auth")
+			http.Redirect(w, r, authUrl, http.StatusNotFound)
 		}
 	}
 
@@ -74,7 +78,8 @@ func getMeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(meBytes)
 }
 
-func retryWithRefresh(user *User) bool {
+func retryWithRefresh(user *User) {
+	fmt.Println("Trying to refresh token")
 	params := url.Values{}
 
 	params.Add("grant_type", "refresh_token")
@@ -94,27 +99,28 @@ func retryWithRefresh(user *User) bool {
 	request.Header.Set("client-request-id", fmt.Sprint(uuid.Must(uuid.NewRandom())))
 	request.Header.Set("client-return-client-request-id", "true")
 
-	response, _ := client.Do(request)
+	response, err := client.Do(request)
 	if response.StatusCode != 200 {
-		panic("Something went wrong, retry to sign in please")
-	}
+		fmt.Errorf("ERROR: %s", "Can not refresh token, try to auth again")
 
+	}
 	defer response.Body.Close()
 
 	var refreshTokenResponse refreshTokenResponse
 	meBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
+		fmt.Errorf("ERROR: %s", err)
+
 	}
 
 	err = json.Unmarshal(meBytes, &refreshTokenResponse)
 	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
+		fmt.Errorf("ERROR: %s", err)
+
 	}
 
 	RefreshToken(user, refreshTokenResponse)
 
-	return true
 }
 
 func getPhotoHandler(w http.ResponseWriter, r *http.Request) {

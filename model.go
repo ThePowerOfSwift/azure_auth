@@ -1,7 +1,7 @@
 package main
 
 import (
-"fmt"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -59,7 +59,7 @@ type OToken struct {
 }
 
 func InitDB() *gorm.DB {
-	if !*devEnv{
+	if !*devEnv {
 		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			getenv("DB_HOST"), getenv("DB_PORT"), getenv("DB_USER"), getenv("DB_PASSWORD"), getenv("DB_NAME"))
 		dialect = "postgres"
