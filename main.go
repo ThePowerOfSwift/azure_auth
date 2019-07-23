@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
@@ -15,77 +17,26 @@ import (
 	"time"
 )
 
-type OauthResponse struct {
-	TokenType    string `json:"token_type"`
-	Scope        string `json:"scope"`
-	ExpiresIn    string `json:"expires_in"`
-	ExtExpiresIn string `json:"ext_expires_in"`
-	ExpiresOn    string `json:"expires_on"`
-	NotBefore    string `json:"not_before"`
-	Resource     string `json:"resource"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	IDToken      string `json:"id_token"`
-}
-
-// implementation of TokenInterface interface
-func (o OauthResponse) getTemporaryToken() string {
-	return ""
-}
-func (o OauthResponse) publicToken() string {
-	return fmt.Sprint(uuid.New())
-}
-func (o OauthResponse) getAccessToken() string {
-	return o.AccessToken
-}
-func (o OauthResponse) getRefreshToken() string {
-	return o.RefreshToken
-}
-
-type refreshTokenResponse struct {
-	TokenType    string `json:"token_type"`
-	Scope        string `json:"scope"`
-	ExpiresIn    string `json:"expires_in"`
-	ExtExpiresIn string `json:"ext_expires_in"`
-	ExpiresOn    string `json:"expires_on"`
-	NotBefore    string `json:"not_before"`
-	Resource     string `json:"resource"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
-type LoggedUserInfo struct {
-	OdataContext      string        `json:"@odata.context"`
-	BusinessPhones    []interface{} `json:"businessPhones"`
-	DisplayName       string        `json:"displayName"`
-	GivenName         string        `json:"givenName"`
-	JobTitle          string        `json:"jobTitle"`
-	Mail              string        `json:"mail"`
-	MobilePhone       interface{}   `json:"mobilePhone"`
-	OfficeLocation    string        `json:"officeLocation"`
-	PreferredLanguage interface{}   `json:"preferredLanguage"`
-	Surname           string        `json:"surname"`
-	UserPrincipalName string        `json:"userPrincipalName"`
-	ID                string        `json:"id"`
-}
-
 var (
-	db = InitDB("./authData")
+	db *gorm.DB
+	devEnv = flag.Bool("d", false, "setup dev env var")
 
 	timeout = time.Duration(5 * time.Second)
 	client  = http.Client{
 		Timeout: timeout,
 	}
 
-	OuathScopes           = []string{"offline_access", "openid"}
-	ClientIdConst         = getenv("CLIENT_ID")
-	TenantConst           = getenv("TENANT")
-	ClientSecretConst     = getenv("CLIENT_SECRET")
-	BaseUrl				  = getenv("BASE_URL")
-	authority             = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
+	OuathScopes       = []string{"offline_access", "openid"}
+	ClientIdConst     = getenv("CLIENT_ID")
+	TenantConst       = getenv("TENANT")
+	ClientSecretConst = getenv("CLIENT_SECRET")
+	BaseUrl           = getenv("BASE_URL")
+	dialect = "sqlite3"
+	connStr = "./authData"
+	authority = Authority{"login.microsoftonline.com", os.Getenv("TENANT")}
 )
 
-func getenv(name string) string{
+func getenv(name string) string {
 	_, err := os.Stat(".env")
 	if err == nil {
 		godotenv.Load()
@@ -97,45 +48,19 @@ func getenv(name string) string{
 	return v
 }
 
-func init() {
-	CreateTable(db)
-}
-
-func getMeRequest(token string) *http.Response {
-	meRequest, err := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/me", nil)
-	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
-	}
-
-	tokenStr := fmt.Sprint("Bearer ", token)
-	meRequest.Header.Set("Authorization", tokenStr)
-
-	meResponse, err := client.Do(meRequest)
-	if meResponse.StatusCode != 200 {
-		panic("Something went wrong, retry to sign in please")
-	}
-
-	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
-	}
-
-	return meResponse
-}
-
 func getMeHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 
-	it, err := FindRecord(db, token)
-	if err != nil {
-		http.Error(w, err.Error(), 404)
+	user := FindUserByPubToken(token)
+	if (user == User{}) {
+		http.Error(w, "Record not found", http.StatusNotFound)
 		return
 	}
-
-	meResponse := getMeRequest(it[0].AccessToken)
+	meResponse := getMeRequest(user.AccessToken)
 	defer meResponse.Body.Close()
 
 	if meResponse.StatusCode != 200 {
-		if !retryWithRefresh(it[0].ClientPublicToken, it[0].RefreshToken) {
+		if !retryWithRefresh(&user) {
 			panic("Something went wrong, retry to sign in please")
 		}
 	}
@@ -145,26 +70,15 @@ func getMeHandler(w http.ResponseWriter, r *http.Request) {
 		panic(fmt.Errorf("ERROR: %s", err))
 	}
 
-	var loggedUserInfo LoggedUserInfo
-	err = json.Unmarshal(meBytes, &loggedUserInfo)
-	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
-	}
-
-	js, err := json.Marshal(loggedUserInfo)
-	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
+	w.Write(meBytes)
 }
 
-func retryWithRefresh(clientToken, refreshToken string) bool {
+func retryWithRefresh(user *User) bool {
 	params := url.Values{}
 
 	params.Add("grant_type", "refresh_token")
-	params.Add("refresh_token", refreshToken)
+	params.Add("refresh_token", user.RefreshToken)
 	params.Add("client_id", ClientIdConst)
 	params.Add("client_secret", ClientSecretConst)
 	params.Add("resource", "https://graph.microsoft.com")
@@ -198,24 +112,21 @@ func retryWithRefresh(clientToken, refreshToken string) bool {
 		panic(fmt.Errorf("ERROR: %s", err))
 	}
 
-	err = UpdateItem(db, clientToken, refreshTokenResponse.AccessToken, refreshTokenResponse.RefreshToken)
-	if err != nil {
-		panic(fmt.Errorf("ERROR: %s", err))
-	}
+	RefreshToken(user, refreshTokenResponse)
+
 	return true
 }
 
-func getPhotoHandler(w http.ResponseWriter, r *http.Request){
+func getPhotoHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
-	if token == "" {
+
+	user := FindUserByPubToken(token)
+	if (user == User{}) {
+		http.Error(w, "Record not found", http.StatusNotFound)
 		return
 	}
 
-	it, err := FindRecord(db, token)
-	if err != nil {
-		return
-	}
-	tokenStr := fmt.Sprint("Bearer ", it[0].AccessToken)
+	tokenStr := fmt.Sprint("Bearer ", user.AccessToken)
 
 	picRequest, err := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/me/photo/$value", nil)
 	picRequest.Header.Set("Authorization", tokenStr)
@@ -237,7 +148,11 @@ func getPhotoHandler(w http.ResponseWriter, r *http.Request){
 }
 
 func main() {
+	flag.Parse()
+
+	db = InitDB()
 	defer db.Close()
+
 	m := martini.Classic()
 
 	m.Get("/get_me", getMeHandler)
